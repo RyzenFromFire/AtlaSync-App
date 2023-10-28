@@ -15,6 +15,7 @@
       android:id="@+id/toolbar"
       android:layout_width="match_parent"
       android:layout_height="?attr/actionBarSize"
+      android:layout_gravity="bottom"
       android:background="?attr/colorPrimary"
       app:popupTheme="@style/Theme.AtlaSync.PopupOverlay" />
 
@@ -22,13 +23,35 @@
 
   <include layout="@layout/content_main" />
 
-  <com.google.android.material.floatingactionbutton.FloatingActionButton
-    android:id="@+id/fab"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|end"
-    android:layout_marginEnd="@dimen/fab_margin"
-    android:layout_marginBottom="16dp"
-    app:srcCompat="@android:drawable/ic_dialog_email" />
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+      android:id="@+id/sync_fab"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="bottom|end"
+      android:layout_marginStart="@dimen/fab_margin"
+      android:layout_marginEnd="@dimen/fab_margin"
+      android:layout_marginTop="@dimen/fab_margin"
+      android:layout_marginBottom="@dimen/fab2_offset"
+      android:contentDescription="@string/fab1_alt_text"
+      app:maxImageSize="36dp"
+      app:srcCompat="@drawable/location_searching" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+      android:id="@+id/scan_fab"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="bottom|end"
+      android:layout_marginEnd="@dimen/fab_margin"
+      android:layout_marginBottom="@dimen/fab_margin"
+      android:contentDescription="@string/fab1_alt_text"
+      app:maxImageSize="36dp"
+      app:srcCompat="@drawable/qr_code_scanner" />
+
+
+
+
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
