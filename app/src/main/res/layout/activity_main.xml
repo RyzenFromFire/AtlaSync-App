@@ -35,7 +35,7 @@
       android:layout_marginTop="@dimen/fab_margin"
       android:layout_marginBottom="@dimen/fab2_offset"
       android:contentDescription="@string/fab1_alt_text"
-      app:maxImageSize="36dp"
+      app:maxImageSize="@dimen/sync_fab_icon_size"
       app:srcCompat="@drawable/location_searching" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -46,7 +46,7 @@
       android:layout_marginEnd="@dimen/fab_margin"
       android:layout_marginBottom="@dimen/fab_margin"
       android:contentDescription="@string/fab1_alt_text"
-      app:maxImageSize="36dp"
+      app:maxImageSize="@dimen/scan_fab_icon_size"
       app:srcCompat="@drawable/qr_code_scanner" />
 
 
