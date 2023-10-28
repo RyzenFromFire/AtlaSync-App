@@ -10,11 +10,16 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
 import com.atlasync.app.databinding.ActivityMainBinding
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var scanner: GmsBarcodeScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +33,32 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.scanFab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .enableAutoZoom()
+            .build()
+
+        scanner = GmsBarcodeScanning.getClient(this, options)
+
+        binding.syncFab.setOnClickListener { view ->
+            Snackbar.make(view, "Sync FAB triggered", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
+        }
+
+        binding.scanFab.setOnClickListener { view ->
+            scanner.startScan()
+                .addOnSuccessListener { barcode ->
+                    Snackbar.make(view, barcode.rawValue ?: "Invalid Code", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show()
+                }
+                .addOnCanceledListener {
+                    Snackbar.make(view, "Scan Canceled", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show()
+                }
+                .addOnFailureListener { e ->
+                    Snackbar.make(view, "Scan error: $e", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show()
+                }
         }
     }
 
