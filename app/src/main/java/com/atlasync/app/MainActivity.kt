@@ -1,25 +1,32 @@
 package com.atlasync.app
 
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
+import androidx.preference.PreferenceManager
 import com.atlasync.app.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var scanner: GmsBarcodeScanner
+    private lateinit var pref: SharedPreferences
+    private lateinit var ipPref: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +67,11 @@ class MainActivity : AppCompatActivity() {
                         .setAction("Action", null).show()
                 }
         }
+
+        pref = PreferenceManager.getDefaultSharedPreferences(this)
+        ipPref = pref.getString(getString(R.string.ip_pref_key), getString(R.string.default_ip)) ?: getString(R.string.default_ip)
+        PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
+        Toast.makeText(this, ipPref, Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -73,7 +85,11 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

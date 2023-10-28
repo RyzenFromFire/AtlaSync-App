@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <PreferenceCategory android:title="Developer Options"
+    />
+  <EditTextPreference
+    android:defaultValue="@string/default_ip"
+    android:key="@string/ip_pref_key"
+    android:selectAllOnFocus="true"
+    android:singleLine="true"
+    android:title="@string/ip_setting_title"
+    android:summary="@string/ip_setting_summary"/>
+</PreferenceScreen>
