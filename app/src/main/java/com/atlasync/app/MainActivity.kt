@@ -2,10 +2,15 @@ package com.atlasync.app
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
+import android.util.DisplayMetrics
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -19,6 +24,7 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import okhttp3.*
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 
@@ -31,6 +37,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ipPref: String
     private lateinit var baseURL: String
     private val client = OkHttpClient()
+    private lateinit var roomInfoString: String
+    private lateinit var backgroundImage: ImageView
+    private lateinit var backgroundImageString: String
+    private var displayMetrics = DisplayMetrics()
+    private lateinit var ROOM_INFO_URL: String
+    private lateinit var FLOOR_MAP_URL: String
+    private lateinit var lastRoomID: String
+    private val LAST_ROOM_ID_KEY = "ROOM"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +77,16 @@ class MainActivity : AppCompatActivity() {
         PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
         baseURL = "http://$ipPref:5000"
 //        Toast.makeText(this, ipPref, Toast.LENGTH_SHORT).show()
+
+
+        val windowHeight = this.windowManager.currentWindowMetrics.bounds.height()
+        backgroundImage = binding.root.findViewById(R.id.backgroundImage)
+        backgroundImage.maxHeight = windowHeight
+
+        ROOM_INFO_URL = getString(R.string.room_info_url)
+        FLOOR_MAP_URL = getString(R.string.floor_map_url)
+
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -91,6 +115,23 @@ class MainActivity : AppCompatActivity() {
                 || super.onSupportNavigateUp()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (this::lastRoomID.isInitialized) {
+            outState.putString(LAST_ROOM_ID_KEY, lastRoomID)
+        }
+        println("SAVING STATE")
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        lastRoomID = savedInstanceState.getString(LAST_ROOM_ID_KEY) ?: ""
+        if (roomInfoString != "") {
+            getRoomInfo(lastRoomID)
+        }
+        println("RESTORING STATE")
+    }
+
     private fun doScan(view: View) {
         // Perform Scan
         scanner.startScan()
@@ -110,9 +151,9 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private fun getRoomInfo(id: String) {
+    private fun initiateRequest(url: String, callback: (response: Response) -> Unit) {
         val request = Request.Builder()
-            .url("$baseURL/room?id=$id")
+            .url(url)
             .build()
         try {
             val response = client.newCall(request).enqueue(object : Callback {
@@ -121,8 +162,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onResponse(call: Call, response: Response) {
-                    val respString = response.body()?.string() ?: "Invalid Room"
-                    updateLocation(respString)
+                    callback(response)
                 }
             })
         } catch (e: Exception) {
@@ -130,7 +170,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateLocation(rawLocation: String) {
-        println(rawLocation)
+    private fun getRoomInfo(id: String) {
+        initiateRequest("$baseURL/$ROOM_INFO_URL?id=$id", this::setRoomInfo)
+        initiateRequest("$baseURL/$FLOOR_MAP_URL?id=$id", this::setFloorMap)
+    }
+
+    private fun setRoomInfo(response: Response) {
+        roomInfoString = response.body()?.string() ?: "Invalid Room"
+        print(roomInfoString)
+    }
+
+    private fun setFloorMap(response: Response) {
+        val imgStr = response.body()?.string()
+        if (imgStr == null) {
+            return
+        } else {
+            decodeImage(imgStr)
+        }
+    }
+
+    private fun decodeImage(encodedStr: String) {
+
+        backgroundImageString = encodedStr
+
+        // https://stackoverflow.com/a/49628231
+        // decode base64 string to image
+        val imageBytes: ByteArray = Base64.decode(encodedStr, Base64.DEFAULT)
+        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+        // required otherwise android will throw the error:
+        // "Only the original thread that created a view hierarchy can touch its views."
+        runOnUiThread {
+            backgroundImage.setImageBitmap(decodedImage)
+        }
     }
 }

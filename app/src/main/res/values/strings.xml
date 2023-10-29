@@ -30,4 +30,6 @@
   <string name="attachment_summary_off">Only download attachments when manually requested</string>
   <string name="ip_pref_key">ip_edit_text_pref</string>
   <string name="default_ip">192.168.0.2</string>
+  <string name="room_info_url">room_info</string>
+  <string name="floor_map_url">floor_map</string>
 </resources>
