@@ -11,6 +11,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -43,61 +44,45 @@ class MainActivity : AppCompatActivity() {
     private var displayMetrics = DisplayMetrics()
     private lateinit var ROOM_INFO_URL: String
     private lateinit var FLOOR_MAP_URL: String
-    public var lastRoomID: String = ""
-    public val LAST_ROOM_ID_KEY = "ROOM"
+    var lastRoomID: String = ""
+    val LAST_ROOM_ID_KEY = "ROOM"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (savedInstanceState != null) {
-//            lastRoomID = savedInstanceState.getString(LAST_ROOM_ID_KEY) ?: ""
-            if (lastRoomID != "") {
-                getRoomInfo(lastRoomID)
-            }
-            println("lastRoomID = `$lastRoomID`")
-        } else {
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-            binding = ActivityMainBinding.inflate(layoutInflater)
-            setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
 
-            setSupportActionBar(binding.toolbar)
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
-            val navController = findNavController(R.id.nav_host_fragment_content_main)
-            appBarConfiguration = AppBarConfiguration(navController.graph)
-            setupActionBarWithNavController(navController, appBarConfiguration)
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .enableAutoZoom()
+            .build()
 
-            val options = GmsBarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-                .enableAutoZoom()
-                .build()
+        scanner = GmsBarcodeScanning.getClient(this, options)
 
-            scanner = GmsBarcodeScanning.getClient(this, options)
-
-            binding.syncFab.setOnClickListener { view ->
-                Snackbar.make(view, "Sync FAB triggered", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-            }
-
-            binding.scanFab.setOnClickListener { view -> doScan(view) }
-
-            pref = PreferenceManager.getDefaultSharedPreferences(this)
-            ipPref = pref.getString(getString(R.string.ip_pref_key), getString(R.string.default_ip))
-                ?: getString(R.string.default_ip)
-            PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
-            baseURL = "http://$ipPref:5000"
-//        Toast.makeText(this, ipPref, Toast.LENGTH_SHORT).show()
-
-
-            val windowHeight = this.windowManager.currentWindowMetrics.bounds.height()
-            backgroundImage = binding.root.findViewById(R.id.backgroundImage)
-            backgroundImage.maxHeight = windowHeight
-
-            ROOM_INFO_URL = getString(R.string.room_info_url)
-            FLOOR_MAP_URL = getString(R.string.floor_map_url)
-
-            println("ONCREATE CALLED")
-            println("lastRoomID = `$lastRoomID`")
+        binding.syncFab.setOnClickListener { view ->
+            Snackbar.make(view, "Sync FAB triggered", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show()
         }
+
+        binding.scanFab.setOnClickListener { view -> doScan(view) }
+
+
+        val windowHeight = this.windowManager.currentWindowMetrics.bounds.height()
+        backgroundImage = binding.root.findViewById(R.id.backgroundImage)
+        backgroundImage.maxHeight = windowHeight
+
+        ROOM_INFO_URL = getString(R.string.room_info_url)
+        FLOOR_MAP_URL = getString(R.string.floor_map_url)
+
+//        println("ONCREATE CALLED")
+//        println("lastRoomID = `$lastRoomID`")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -131,8 +116,8 @@ class MainActivity : AppCompatActivity() {
         if (lastRoomID != "") {
             outState.putString(LAST_ROOM_ID_KEY, lastRoomID)
         }
-        println("SAVING STATE")
-        println("lastRoomID = `$lastRoomID`")
+//        println("SAVING STATE")
+//        println("lastRoomID = `$lastRoomID`")
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -141,12 +126,20 @@ class MainActivity : AppCompatActivity() {
         if (lastRoomID != "") {
             getRoomInfo(lastRoomID)
         }
-        println("RESTORING STATE")
+//        println("RESTORING STATE")
     }
 
     override fun onResume() {
         super.onResume()
-        getRoomInfo(lastRoomID)
+        pref = PreferenceManager.getDefaultSharedPreferences(this)
+        ipPref = pref.getString(getString(R.string.ip_pref_key), getString(R.string.default_ip))
+            ?: getString(R.string.default_ip)
+        PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
+        baseURL = "http://$ipPref:5000"
+//        Toast.makeText(this, ipPref, Toast.LENGTH_SHORT).show()
+
+//        println("ONRESUME CALLED")
+//        getRoomInfo(lastRoomID)
 //        println("lastRoomID: $lastRoomID")
 //        if (this::roomInfoString.isInitialized) {
 //            println("ris: $roomInfoString")
