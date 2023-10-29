@@ -2,7 +2,6 @@ package com.atlasync.app
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
@@ -11,7 +10,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -25,7 +23,6 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import okhttp3.*
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 
@@ -46,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var FLOOR_MAP_URL: String
     var lastRoomID: String = ""
     val LAST_ROOM_ID_KEY = "ROOM"
+    private var viewState = ViewState()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -201,7 +199,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun setRoomInfo(response: Response) {
         roomInfoString = response.body()?.string() ?: "Invalid Room"
-        print(roomInfoString)
+        println(roomInfoString)
+        val arr = roomInfoString.split(';')
+        println("arr = $arr")
+        val locations = arr[0].slice(12..(arr[0].length - 4)).split(',')
+        val locationX = locations[0].toInt()
+        val locationY = locations[1].trim().toInt()
+        println("locations = $locations")
+        println("locationX = $locationX")
+        println("locationY = $locationY")
+        val roomName = arr[1].slice(7..(arr[1].length - 3))
+        println("roomName = $roomName")
+        val floor = arr[2].slice(8..(arr[2].length - 3)).toInt()
+        println("floor = $floor")
+        val buildingName = arr[3].slice(11..(arr[3].length - 3))
+        println("buildingName = $buildingName")
+        viewState = ViewState(roomID = lastRoomID, x = locationX, y = locationY,
+                              roomName = roomName, floor = floor, buildingName = buildingName)
     }
 
     private fun setFloorMap(response: Response) {
@@ -229,5 +243,10 @@ class MainActivity : AppCompatActivity() {
                 backgroundImage.setImageBitmap(decodedImage)
             }
         }
+    }
+
+    inner class ViewState(var roomID: String = "0", var x: Int = 0, var y: Int = 0,
+                          var roomName: String = "Room", var floor: Int = 1, var buildingName: String = "Building") {
+
     }
 }
