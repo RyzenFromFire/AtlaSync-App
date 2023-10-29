@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var baseURL: String
     private val client = OkHttpClient()
     private lateinit var roomInfoString: String
-    private lateinit var backgroundImage: ImageView
+    private lateinit var backgroundImage: ZoomView
     private lateinit var backgroundImageString: String
     private var displayMetrics = DisplayMetrics()
     private lateinit var ROOM_INFO_URL: String
