@@ -43,50 +43,61 @@ class MainActivity : AppCompatActivity() {
     private var displayMetrics = DisplayMetrics()
     private lateinit var ROOM_INFO_URL: String
     private lateinit var FLOOR_MAP_URL: String
-    private lateinit var lastRoomID: String
-    private val LAST_ROOM_ID_KEY = "ROOM"
+    public var lastRoomID: String = ""
+    public val LAST_ROOM_ID_KEY = "ROOM"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        if (savedInstanceState != null) {
+//            lastRoomID = savedInstanceState.getString(LAST_ROOM_ID_KEY) ?: ""
+            if (lastRoomID != "") {
+                getRoomInfo(lastRoomID)
+            }
+            println("lastRoomID = `$lastRoomID`")
+        } else {
 
-        setSupportActionBar(binding.toolbar)
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+            setSupportActionBar(binding.toolbar)
 
-        val options = GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .enableAutoZoom()
-            .build()
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+            appBarConfiguration = AppBarConfiguration(navController.graph)
+            setupActionBarWithNavController(navController, appBarConfiguration)
 
-        scanner = GmsBarcodeScanning.getClient(this, options)
+            val options = GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .enableAutoZoom()
+                .build()
 
-        binding.syncFab.setOnClickListener { view ->
-            Snackbar.make(view, "Sync FAB triggered", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
+            scanner = GmsBarcodeScanning.getClient(this, options)
 
-        binding.scanFab.setOnClickListener { view -> doScan(view) }
+            binding.syncFab.setOnClickListener { view ->
+                Snackbar.make(view, "Sync FAB triggered", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+            }
 
-        pref = PreferenceManager.getDefaultSharedPreferences(this)
-        ipPref = pref.getString(getString(R.string.ip_pref_key), getString(R.string.default_ip)) ?: getString(R.string.default_ip)
-        PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
-        baseURL = "http://$ipPref:5000"
+            binding.scanFab.setOnClickListener { view -> doScan(view) }
+
+            pref = PreferenceManager.getDefaultSharedPreferences(this)
+            ipPref = pref.getString(getString(R.string.ip_pref_key), getString(R.string.default_ip))
+                ?: getString(R.string.default_ip)
+            PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false);
+            baseURL = "http://$ipPref:5000"
 //        Toast.makeText(this, ipPref, Toast.LENGTH_SHORT).show()
 
 
-        val windowHeight = this.windowManager.currentWindowMetrics.bounds.height()
-        backgroundImage = binding.root.findViewById(R.id.backgroundImage)
-        backgroundImage.maxHeight = windowHeight
+            val windowHeight = this.windowManager.currentWindowMetrics.bounds.height()
+            backgroundImage = binding.root.findViewById(R.id.backgroundImage)
+            backgroundImage.maxHeight = windowHeight
 
-        ROOM_INFO_URL = getString(R.string.room_info_url)
-        FLOOR_MAP_URL = getString(R.string.floor_map_url)
+            ROOM_INFO_URL = getString(R.string.room_info_url)
+            FLOOR_MAP_URL = getString(R.string.floor_map_url)
 
-
+            println("ONCREATE CALLED")
+            println("lastRoomID = `$lastRoomID`")
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -117,19 +128,34 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (this::lastRoomID.isInitialized) {
+        if (lastRoomID != "") {
             outState.putString(LAST_ROOM_ID_KEY, lastRoomID)
         }
         println("SAVING STATE")
+        println("lastRoomID = `$lastRoomID`")
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         lastRoomID = savedInstanceState.getString(LAST_ROOM_ID_KEY) ?: ""
-        if (roomInfoString != "") {
+        if (lastRoomID != "") {
             getRoomInfo(lastRoomID)
         }
         println("RESTORING STATE")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        getRoomInfo(lastRoomID)
+//        println("lastRoomID: $lastRoomID")
+//        if (this::roomInfoString.isInitialized) {
+//            println("ris: $roomInfoString")
+//        }
+//        if (backgroundImageString != "") {
+////            decodeImage(backgroundImageString)
+//            println("no")
+//        }
+//        println("bis: $backgroundImageString")
     }
 
     private fun doScan(view: View) {
@@ -170,9 +196,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getRoomInfo(id: String) {
-        initiateRequest("$baseURL/$ROOM_INFO_URL?id=$id", this::setRoomInfo)
-        initiateRequest("$baseURL/$FLOOR_MAP_URL?id=$id", this::setFloorMap)
+    fun getRoomInfo(id: String) {
+        if (id != "" && id != "0") {
+            lastRoomID = id
+            initiateRequest("$baseURL/$ROOM_INFO_URL?id=$id", this::setRoomInfo)
+            initiateRequest("$baseURL/$FLOOR_MAP_URL?id=$id", this::setFloorMap)
+        } else {
+            println("Invalid Room ID: $id")
+        }
     }
 
     private fun setRoomInfo(response: Response) {
@@ -190,18 +221,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun decodeImage(encodedStr: String) {
+        if (encodedStr != "") {
 
-        backgroundImageString = encodedStr
+            backgroundImageString = encodedStr
 
-        // https://stackoverflow.com/a/49628231
-        // decode base64 string to image
-        val imageBytes: ByteArray = Base64.decode(encodedStr, Base64.DEFAULT)
-        val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            // https://stackoverflow.com/a/49628231
+            // decode base64 string to image
+            val imageBytes: ByteArray = Base64.decode(encodedStr, Base64.DEFAULT)
+            val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
-        // required otherwise android will throw the error:
-        // "Only the original thread that created a view hierarchy can touch its views."
-        runOnUiThread {
-            backgroundImage.setImageBitmap(decodedImage)
+            // required otherwise android will throw the error:
+            // "Only the original thread that created a view hierarchy can touch its views."
+            runOnUiThread {
+                backgroundImage.setImageBitmap(decodedImage)
+            }
         }
     }
 }

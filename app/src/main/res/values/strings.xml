@@ -2,7 +2,7 @@
   <string name="app_name">AtlaSync</string>
   <string name="action_settings">Settings</string>
   <!-- Strings used for fragments for navigation -->
-  <string name="map_fragment_label">Map Fragment</string>
+  <string name="map_fragment_label">AtlaSync Map</string>
   <string name="second_fragment_label">Settings Fragment</string>
   <string name="next">Next</string>
   <string name="previous">Previous</string>

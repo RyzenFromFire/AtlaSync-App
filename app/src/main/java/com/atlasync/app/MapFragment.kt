@@ -48,6 +48,31 @@ class MapFragment : Fragment() {
 //        }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (activity is MainActivity) {
+            val ac = (activity as MainActivity)
+            if (ac.lastRoomID != "") {
+                outState.putString(ac.LAST_ROOM_ID_KEY, ac.lastRoomID)
+            }
+            println("SAVING FRAGMENT STATE")
+        }
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        if (activity is MainActivity) {
+            if (savedInstanceState != null) {
+                val ac = (activity as MainActivity)
+                ac.lastRoomID = savedInstanceState.getString(ac.LAST_ROOM_ID_KEY) ?: ""
+                if (ac.lastRoomID != "") {
+                    ac.getRoomInfo(ac.lastRoomID)
+                }
+                println("RESTORING FRAGMENT STATE")
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
